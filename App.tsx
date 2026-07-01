@@ -7,6 +7,7 @@ import Toast from 'react-native-toast-message';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SizeConfigProvider } from './app/utils/SizeConfig';
 import SplashScreen from './app/screens/auth/SplashScreen';
+import InAppUpdater from './app/screens/auth/InAppUpdater';
 
 function App() {
   return (
@@ -19,7 +20,7 @@ function App() {
             barStyle="dark-content"
           />
           <NavigationContainer>
-            <SplashScreen />
+            <InAppUpdater />
             <Toast />
           </NavigationContainer>
         </SafeAreaProvider>
