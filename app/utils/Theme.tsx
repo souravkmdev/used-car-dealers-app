@@ -1,11 +1,11 @@
 export const colors = {
   primary: '#233F78',
-    text_Primary: '#0C0032',
-    text_Secondary: '#6B7280',
-    lightBorder: '#CBD5E1',
-      border: '#E5E7EB',
-        white: 'white',
-          error: 'red',
+  text_Primary: '#0C0032',
+  text_Secondary: '#6B7280',
+  lightBorder: '#CBD5E1',
+  border: '#E5E7EB',
+  white: 'white',
+  error: 'red',
 };
 
 export const fonts = {

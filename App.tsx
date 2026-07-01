@@ -6,6 +6,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SizeConfigProvider } from './app/utils/SizeConfig';
 import SplashScreen from './app/screens/auth/SplashScreen';
+import LoginScreen from './app/screens/auth/LoginScreen';
 
 function App() {
   return (
@@ -18,7 +19,8 @@ function App() {
             barStyle="dark-content"
           />
           <NavigationContainer>
-            <SplashScreen />
+            {/* <SplashScreen /> */}
+            <LoginScreen />
           </NavigationContainer>
         </SafeAreaProvider>
       </SizeConfigProvider>
