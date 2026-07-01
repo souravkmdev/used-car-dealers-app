@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import {
+    ActivityIndicator,
+    Alert,
     KeyboardAvoidingView,
     Platform,
     ScrollView,
@@ -11,12 +13,20 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Feather from 'react-native-vector-icons/Feather';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
+import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+
 import { colors, fonts } from '../../utils/Theme';
 import ApplyNowCard from './components/ApplyNowCard';
 import InputField from './components/InputField';
 import LoginFooter from './components/LoginFooter';
 import LoginHero from './components/LoginHero';
 import { useSizeConfig } from '../../utils/SizeConfig';
+import { useLoginMutation } from '../../store/services/authApi';
+import { useAppDispatch } from '../../store/hooks';
+import { setCredentials } from '../../store/slices/authSlice';
+import { RootStackParamList } from '../../navigation/AppNavigator';
 
 const LoginScreen = () => {
     const [userId, setUserId] = useState('');
@@ -24,6 +34,65 @@ const LoginScreen = () => {
     const [showPassword, setShowPassword] = useState(false);
     const size = useSizeConfig();
     const styles = getStyles(size);
+
+    const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+    const dispatch = useAppDispatch();
+    const [login, { isLoading }] = useLoginMutation();
+
+    const handleLogin = async () => {
+        if (!userId.trim()) {
+            Alert.alert('Validation Error', 'Please enter your User ID.');
+            return;
+        }
+        if (!password) {
+            Alert.alert('Validation Error', 'Please enter your Password.');
+            return;
+        }
+
+        try {
+            const response = await login({
+                login_id: userId.trim(),
+                password: password,
+            }).unwrap();
+
+            console.log('login response: ', response)
+
+            const token = response?.access_token
+
+
+            if (!token) {
+                Alert.alert('Sign In Failed', 'Server response is missing the authentication token.');
+                return;
+            }
+
+            const user = response?.user;
+
+            await AsyncStorage.setItem('token', token);
+            await AsyncStorage.setItem('user', JSON.stringify(user));
+
+            dispatch(setCredentials({ token, user }));
+
+            navigation.replace('Home');
+        } catch (error: any) {
+            console.error('Sign In error details:', error);
+
+            let errorMessage = 'An unexpected error occurred. Please try again.';
+
+            if (error?.data?.message) {
+                errorMessage = error.data.message;
+            } else if (error?.data?.error) {
+                errorMessage = error.data.error;
+            } else if (error?.message) {
+                errorMessage = error.message;
+            } else if (error?.status === 'FETCH_ERROR') {
+                errorMessage = 'Cannot connect to server. Please check your network connection.';
+            } else if (error?.status === 401 || error?.status === 403) {
+                errorMessage = 'Invalid User ID or Password. Please try again.';
+            }
+
+            Alert.alert('Sign In Failed', errorMessage);
+        }
+    };
 
     return (
         <View style={styles.safeArea}>
@@ -53,6 +122,7 @@ const LoginScreen = () => {
                             onChangeText={setUserId}
                             keyboardType="default"
                             autoCapitalize="none"
+                            editable={!isLoading}
                         />
                         <InputField
                             label="Password"
@@ -61,9 +131,11 @@ const LoginScreen = () => {
                             value={password}
                             onChangeText={setPassword}
                             secureTextEntry={!showPassword}
+                            editable={!isLoading}
                             rightElement={
                                 <TouchableOpacity
                                     onPress={() => setShowPassword(!showPassword)}
+                                    disabled={isLoading}
                                     hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}>
                                     <Feather
                                         name={showPassword ? 'eye' : 'eye-off'}
@@ -74,16 +146,25 @@ const LoginScreen = () => {
                             }
                         />
 
-                        <TouchableOpacity style={styles.forgotWrapper}>
+                        <TouchableOpacity style={styles.forgotWrapper} disabled={isLoading}>
                             <Text style={styles.forgotText}>Forgot Password?</Text>
                         </TouchableOpacity>
-                        <TouchableOpacity activeOpacity={0.82} style={styles.loginBtn}>
+                        <TouchableOpacity
+                            activeOpacity={0.82}
+                            style={styles.loginBtn}
+                            onPress={handleLogin}
+                            disabled={isLoading}
+                        >
                             <LinearGradient
                                 colors={[colors.primary, '#1A2F5E']}
                                 start={{ x: 0, y: 0 }}
                                 end={{ x: 1, y: 0 }}
                                 style={styles.loginGradient}>
-                                <Text style={styles.loginBtnText}>Sign In</Text>
+                                {isLoading ? (
+                                    <ActivityIndicator size="small" color="#FFFFFF" />
+                                ) : (
+                                    <Text style={styles.loginBtnText}>Sign In</Text>
+                                )}
                             </LinearGradient>
                         </TouchableOpacity>
 
@@ -174,7 +255,6 @@ const getStyles = (size: any) => StyleSheet.create({
         color: '#FFFFFF',
         fontSize: size.width * 3.8,
         fontFamily: fonts.bold,
-        marginRight: size.width * 3.8,
         letterSpacing: 0.3,
     },
 });

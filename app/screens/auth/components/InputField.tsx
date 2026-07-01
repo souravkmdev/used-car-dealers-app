@@ -21,6 +21,7 @@ export interface InputFieldProps {
     secureTextEntry?: boolean;
     autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
     rightElement?: React.ReactNode;
+    editable?: boolean;
 }
 
 const InputField: React.FC<InputFieldProps> = ({
@@ -34,6 +35,7 @@ const InputField: React.FC<InputFieldProps> = ({
     secureTextEntry,
     autoCapitalize,
     rightElement,
+    editable,
 }) => {
     const borderAnim = useRef(new Animated.Value(0)).current;
     const [focused, setFocused] = useState(false);
@@ -101,6 +103,7 @@ const InputField: React.FC<InputFieldProps> = ({
                     onChangeText={onChangeText}
                     onFocus={handleFocus}
                     onBlur={handleBlur}
+                    editable={editable}
                 />
                 {rightElement}
             </Animated.View>
